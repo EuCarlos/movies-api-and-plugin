@@ -3,33 +3,45 @@ const router = express.Router()
 var bodyParser = require('body-parser')
 
 import { Request, Response } from 'express'
+import { Slug } from 'src/concerns/slug'
 import JsonResponse from '../../concerns/response'
+
+import database from '../../database/movies.json'
 
 router
     .use(bodyParser.urlencoded({ extended: false }))
     .use(bodyParser.json())
 
     .get('/', (req: Request, res: Response) => {
-        var result = JsonResponse.response("Request Successfully", true, {
-            name: "Carlos Alves",
-            repo: "https://github.com/EuCarlos/movies_api_and_plugin",
-            website: "https://carlosalves.vercel.app/"
-        })
+        const results = database.map((props,) => ({
+            url: `http://${req.headers.host}/api/v1/movies/${props.slug}`,
+            ...props
+        }))
 
-        return res.status(200).json(result)
+        const response = JsonResponse.response("Request Successfully", true, results)
+
+        res.status(200).json(response)
     })
 
-    .get('/', (req: Request, res: Response) => {
-        res.send("Nothing yet")
-    })
+    .get('/:slug', (req: Request, res: Response) => {
+        const slug = Slug.stringToSlug(req.params.slug);
 
-    .get('/movies/:slug', (req: Request, res: Response) => {
-        res.send("Nothing yet")
-    })
+        const result = database.map((props) => ({
+            url: `http://${req.headers.host}/api/v1/movies/${props.slug}`,
+            ...props
+        })).filter(props => (
+            props.slug === slug 
+            || Slug.stringToSlug(props.name) === slug 
+            || props.id === slug
+        ));
+        
+        if(result.length < 1) {
+            const response = JsonResponse.response("Request Failure", false, {})
+            return res.status(404).json(response)
+        }
+        const response = JsonResponse.response("Request Successfully", true, result[0])
 
-    .post('/', (req, res) => {
-        var result = JsonResponse.response("Request Successfully", true, req.body)
-        res.status(201).json(result)
-    })
+        return res.status(200).json(response)
+    })    
 
 module.exports = router
