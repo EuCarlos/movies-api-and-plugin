@@ -37,6 +37,7 @@ styles.innerHTML = `
     padding: 10px;
     border: solid 1px #c1c1c1;
     border-radius: 10px;
+    background: #fff;
 }
 img.movies-plugin__img { width: 110px; margin-right: 1rem; }
 .movies-plugin__text { font-family: monospace; }
